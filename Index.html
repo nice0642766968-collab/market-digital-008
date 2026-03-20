@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>UniMarket — ตลาดซื้อขายมือสอง</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Prompt:wght@300;400;500;600;700&family=Sarabun:wght@300;400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+</head>
+<body>
+
+<!-- ===== AUTH OVERLAY ===== -->
+<div id="auth-overlay" class="auth-overlay active">
+  <div class="auth-bg-grid"></div>
+  <div class="auth-container">
+    <div class="auth-brand">
+      <div class="brand-icon"><i class="fa-solid fa-store"></i></div>
+      <h1>UniMarket</h1>
+      <p>ตลาดซื้อขายมือสองในมหาวิทยาลัย</p>
+    </div>
+
+    <div class="auth-tabs">
+      <button class="tab-btn active" id="tab-login" onclick="switchTab('login')">เข้าสู่ระบบ</button>
+      <button class="tab-btn" id="tab-signup" onclick="switchTab('signup')">สมัครสมาชิก</button>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form" class="auth-form active">
+      <div class="input-group">
+        <i class="fa-solid fa-envelope"></i>
+        <input type="email" id="login-email" placeholder="อีเมล" />
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="login-password" placeholder="รหัสผ่าน" />
+        <button class="toggle-pw" onclick="togglePassword('login-password')"><i class="fa-solid fa-eye"></i></button>
+      </div>
+      <button class="btn-primary" onclick="login()">
+        <span>เข้าสู่ระบบ</span><i class="fa-solid fa-arrow-right"></i>
+      </button>
+      <div class="auth-divider"><span>หรือ</span></div>
+      <button class="btn-google" onclick="loginGoogle()">
+        <i class="fa-brands fa-google"></i> เข้าสู่ระบบด้วย Google
+      </button>
+    </div>
+
+    <!-- Signup Form -->
+    <div id="signup-form" class="auth-form">
+      <div class="input-group">
+        <i class="fa-solid fa-user"></i>
+        <input type="text" id="signup-name" placeholder="ชื่อ-นามสกุล" />
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-envelope"></i>
+        <input type="email" id="signup-email" placeholder="อีเมล" />
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-graduation-cap"></i>
+        <select id="signup-faculty">
+          <option value="">เลือกคณะ/สาขา</option>
+          <option>คณะวิศวกรรมศาสตร์</option>
+          <option>คณะวิทยาศาสตร์</option>
+          <option>คณะแพทยศาสตร์</option>
+          <option>คณะเภสัชศาสตร์</option>
+          <option>คณะบริหารธุรกิจ</option>
+          <option>คณะนิติศาสตร์</option>
+          <option>คณะรัฐศาสตร์</option>
+          <option>คณะศึกษาศาสตร์</option>
+          <option>คณะมนุษยศาสตร์</option>
+          <option>คณะสถาปัตยกรรมศาสตร์</option>
+          <option>คณะศิลปกรรมศาสตร์</option>
+          <option>คณะเกษตรศาสตร์</option>
+        </select>
+      </div>
+      <div class="input-group">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="signup-password" placeholder="รหัสผ่าน (อย่างน้อย 6 ตัว)" />
+        <button class="toggle-pw" onclick="togglePassword('signup-password')"><i class="fa-solid fa-eye"></i></button>
+      </div>
+      <button class="btn-primary" onclick="signup()">
+        <span>สมัครสมาชิก</span><i class="fa-solid fa-arrow-right"></i>
+      </button>
+    </div>
+
+    <p id="auth-message" class="auth-msg"></p>
+  </div>
+</div>
+
+<!-- ===== MAIN APP ===== -->
+<div id="app" class="app hidden">
+
+  <!-- NAVBAR -->
+  <nav class="navbar">
+    <div class="nav-left">
+      <div class="nav-brand">
+        <i class="fa-solid fa-store"></i>
+        <span>UniMarket</span>
+      </div>
+    </div>
+    <div class="nav-search">
+      <i class="fa-solid fa-search"></i>
+      <input type="text" id="search-input" placeholder="ค้นหาสินค้า..." oninput="searchProducts()" />
+    </div>
+    <div class="nav-right">
+      <button class="nav-btn" onclick="openSection('post')"><i class="fa-solid fa-plus"></i> ลงประกาศ</button>
+      <button class="nav-btn icon-btn" onclick="openSection('chat')" id="chat-nav-btn">
+        <i class="fa-solid fa-comment-dots"></i>
+        <span class="badge" id="msg-badge" style="display:none">0</span>
+      </button>
+      <div class="nav-avatar" onclick="toggleProfileMenu()">
+        <img id="nav-avatar-img" src="" alt="" onerror="this.style.display='none';document.getElementById('nav-avatar-fallback').style.display='flex'" />
+        <div id="nav-avatar-fallback" class="avatar-fallback"><i class="fa-solid fa-user"></i></div>
+        <div class="profile-dropdown" id="profile-dropdown">
+          <div class="pd-header">
+            <p id="pd-name">ชื่อผู้ใช้</p>
+            <span id="pd-faculty"></span>
+          </div>
+          <button onclick="openSection('myitems')"><i class="fa-solid fa-box"></i> สินค้าของฉัน</button>
+          <button onclick="openSection('calc')"><i class="fa-solid fa-calculator"></i> คำนวณค่าใช้จ่าย</button>
+          <button onclick="logout()"><i class="fa-solid fa-right-from-bracket"></i> ออกจากระบบ</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- MAIN CONTENT -->
+  <main class="main-content">
+
+    <!-- === HOME SECTION === -->
+    <section id="section-home" class="section active">
+      <!-- Hero -->
+      <div class="hero">
+        <div class="hero-text">
+          <h2>ซื้อ-ขายสินค้ามือสอง<br /><span>ในมหาวิทยาลัย</span></h2>
+          <p>ง่าย ปลอดภัย น่าเชื่อถือ — ระหว่างนักศึกษาด้วยกัน</p>
+        </div>
+        <div class="hero-stats">
+          <div class="stat"><span id="stat-products">0</span><small>สินค้า</small></div>
+          <div class="stat"><span id="stat-users">0</span><small>ผู้ใช้</small></div>
+        </div>
+      </div>
+
+      <!-- Faculty Filter -->
+      <div class="faculty-bar">
+        <button class="fac-btn active" onclick="filterFaculty('all', this)">
+          <i class="fa-solid fa-border-all"></i> ทั้งหมด
+        </button>
+        <button class="fac-btn" onclick="filterFaculty('คณะวิศวกรรมศาสตร์', this)"><i class="fa-solid fa-gears"></i> วิศวกรรม</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะวิทยาศาสตร์', this)"><i class="fa-solid fa-flask"></i> วิทยาศาสตร์</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะแพทยศาสตร์', this)"><i class="fa-solid fa-stethoscope"></i> แพทย์</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะเภสัชศาสตร์', this)"><i class="fa-solid fa-pills"></i> เภสัช</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะบริหารธุรกิจ', this)"><i class="fa-solid fa-briefcase"></i> บริหาร</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะนิติศาสตร์', this)"><i class="fa-solid fa-scale-balanced"></i> นิติ</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะรัฐศาสตร์', this)"><i class="fa-solid fa-landmark"></i> รัฐศาสตร์</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะศึกษาศาสตร์', this)"><i class="fa-solid fa-chalkboard-teacher"></i> ศึกษาฯ</button>
+        <button class="fac-btn" onclick="filterFaculty('คณะสถาปัตยกรรมศาสตร์', this)"><i class="fa-solid fa-drafting-compass"></i> สถาปัตย์</button>
+      </div>
+
+      <!-- Category Filter -->
+      <div class="category-bar">
+        <button class="cat-btn active" onclick="filterCategory('all', this)">ทุกหมวด</button>
+        <button class="cat-btn" onclick="filterCategory('หนังสือ/ตำรา', this)"><i class="fa-solid fa-book"></i> หนังสือ</button>
+        <button class="cat-btn" onclick="filterCategory('อุปกรณ์อิเล็กทรอนิกส์', this)"><i class="fa-solid fa-laptop"></i> อิเล็กทรอนิกส์</button>
+        <button class="cat-btn" onclick="filterCategory('เสื้อผ้า/ชุดนักศึกษา', this)"><i class="fa-solid fa-shirt"></i> เสื้อผ้า</button>
+        <button class="cat-btn" onclick="filterCategory('อุปกรณ์การเรียน', this)"><i class="fa-solid fa-pen-ruler"></i> อุปกรณ์การเรียน</button>
+        <button class="cat-btn" onclick="filterCategory('เฟอร์นิเจอร์', this)"><i class="fa-solid fa-couch"></i> เฟอร์นิเจอร์</button>
+        <button class="cat-btn" onclick="filterCategory('กีฬา', this)"><i class="fa-solid fa-dumbbell"></i> กีฬา</button>
+        <button class="cat-btn" onclick="filterCategory('อื่นๆ', this)"><i class="fa-solid fa-ellipsis"></i> อื่นๆ</button>
+      </div>
+
+      <!-- Products Grid -->
+      <div class="products-grid" id="products-grid">
+        <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div>
+      </div>
+    </section>
+
+    <!-- === PRODUCT DETAIL SECTION === -->
+    <section id="section-detail" class="section">
+      <button class="back-btn" onclick="openSection('home')"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+      <div id="product-detail-content"></div>
+    </section>
+
+    <!-- === POST PRODUCT SECTION === -->
+    <section id="section-post" class="section">
+      <div class="section-header">
+        <button class="back-btn" onclick="openSection('home')"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+        <h2>ลงประกาศสินค้า</h2>
+      </div>
+      <div class="post-form-card">
+        <div class="form-row">
+          <div class="form-group">
+            <label>ชื่อสินค้า *</label>
+            <input type="text" id="post-title" placeholder="เช่น หนังสือ Calculus มือสอง" />
+          </div>
+          <div class="form-group">
+            <label>ราคา (บาท) *</label>
+            <input type="number" id="post-price" placeholder="0" min="0" />
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label>หมวดหมู่ *</label>
+            <select id="post-category">
+              <option value="">เลือกหมวดหมู่</option>
+              <option>หนังสือ/ตำรา</option>
+              <option>อุปกรณ์อิเล็กทรอนิกส์</option>
+              <option>เสื้อผ้า/ชุดนักศึกษา</option>
+              <option>อุปกรณ์การเรียน</option>
+              <option>เฟอร์นิเจอร์</option>
+              <option>กีฬา</option>
+              <option>อื่นๆ</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>คณะ/สาขา *</label>
+            <select id="post-faculty">
+              <option value="">เลือกคณะ</option>
+              <option>คณะวิศวกรรมศาสตร์</option>
+              <option>คณะวิทยาศาสตร์</option>
+              <option>คณะแพทยศาสตร์</option>
+              <option>คณะเภสัชศาสตร์</option>
+              <option>คณะบริหารธุรกิจ</option>
+              <option>คณะนิติศาสตร์</option>
+              <option>คณะรัฐศาสตร์</option>
+              <option>คณะศึกษาศาสตร์</option>
+              <option>คณะสถาปัตยกรรมศาสตร์</option>
+              <option>คณะศิลปกรรมศาสตร์</option>
+              <option>คณะเกษตรศาสตร์</option>
+            </select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>สภาพสินค้า *</label>
+          <div class="condition-group">
+            <label class="radio-card"><input type="radio" name="condition" value="ดีมาก" /> ดีมาก</label>
+            <label class="radio-card"><input type="radio" name="condition" value="ดี" checked /> ดี</label>
+            <label class="radio-card"><input type="radio" name="condition" value="พอใช้" /> พอใช้</label>
+            <label class="radio-card"><input type="radio" name="condition" value="ต้องซ่อม" /> ต้องซ่อม</label>
+          </div>
+        </div>
+        <div class="form-group">
+          <label>รายละเอียด</label>
+          <textarea id="post-desc" rows="4" placeholder="อธิบายสินค้าของคุณ..."></textarea>
+        </div>
+        <div class="form-group">
+          <label>รูปภาพสินค้า</label>
+          <div class="img-upload-zone" id="img-upload-zone" onclick="document.getElementById('post-img').click()">
+            <i class="fa-solid fa-cloud-arrow-up"></i>
+            <p>คลิกเพื่ออัปโหลดรูปภาพ</p>
+            <input type="file" id="post-img" accept="image/*" multiple style="display:none" onchange="previewImages(event)" />
+          </div>
+          <div id="img-preview-list" class="img-preview-list"></div>
+        </div>
+        <div class="form-group">
+          <label>ช่องทางติดต่อ</label>
+          <input type="text" id="post-contact" placeholder="เช่น เบอร์โทร / LINE ID / Facebook" />
+        </div>
+        <button class="btn-primary large" onclick="postProduct()">
+          <i class="fa-solid fa-paper-plane"></i> ลงประกาศสินค้า
+        </button>
+      </div>
+    </section>
+
+    <!-- === CHAT SECTION === -->
+    <section id="section-chat" class="section">
+      <div class="chat-layout">
+        <div class="chat-sidebar">
+          <div class="chat-sidebar-header">
+            <h3><i class="fa-solid fa-comment-dots"></i> ข้อความ</h3>
+          </div>
+          <div id="chat-list" class="chat-list">
+            <p class="empty-chat">ยังไม่มีการสนทนา</p>
+          </div>
+        </div>
+        <div class="chat-main" id="chat-main">
+          <div class="chat-placeholder">
+            <i class="fa-solid fa-comments"></i>
+            <p>เลือกการสนทนาเพื่อเริ่มแชท</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- === MY ITEMS SECTION === -->
+    <section id="section-myitems" class="section">
+      <div class="section-header">
+        <button class="back-btn" onclick="openSection('home')"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+        <h2>สินค้าของฉัน</h2>
+      </div>
+      <div class="products-grid" id="my-products-grid">
+        <div class="loading-spinner"><i class="fa-solid fa-spinner fa-spin"></i> กำลังโหลด...</div>
+      </div>
+    </section>
+
+    <!-- === CALCULATOR SECTION === -->
+    <section id="section-calc" class="section">
+      <div class="section-header">
+        <button class="back-btn" onclick="openSection('home')"><i class="fa-solid fa-arrow-left"></i> กลับ</button>
+        <h2><i class="fa-solid fa-calculator"></i> คำนวณค่าใช้จ่าย</h2>
+      </div>
+      <div class="calc-card">
+        <div class="calc-grid">
+          <div class="calc-col">
+            <h3>รายการค่าใช้จ่าย</h3>
+            <div id="calc-items-list">
+              <div class="calc-item-row">
+                <input type="text" placeholder="รายการ" class="calc-item-name" />
+                <input type="number" placeholder="จำนวน" class="calc-item-qty" value="1" min="1" />
+                <input type="number" placeholder="ราคา/หน่วย" class="calc-item-price" />
+                <button class="calc-remove-btn" onclick="removeCalcItem(this)"><i class="fa-solid fa-trash"></i></button>
+              </div>
+            </div>
+            <button class="btn-outline" onclick="addCalcItem()"><i class="fa-solid fa-plus"></i> เพิ่มรายการ</button>
+          </div>
+          <div class="calc-col">
+            <h3>สรุปค่าใช้จ่าย</h3>
+            <div class="calc-summary">
+              <div class="calc-summary-row">
+                <span>ราคาสินค้า</span><span id="calc-subtotal">฿0</span>
+              </div>
+              <div class="calc-summary-row">
+                <span>ค่าจัดส่ง</span>
+                <input type="number" id="calc-shipping" value="0" min="0" oninput="updateCalc()" style="width:80px;text-align:right" />
+              </div>
+              <div class="calc-summary-row">
+                <span>ส่วนลด (%)</span>
+                <input type="number" id="calc-discount" value="0" min="0" max="100" oninput="updateCalc()" style="width:80px;text-align:right" />
+              </div>
+              <div class="calc-summary-row total">
+                <span>ยอดรวมทั้งหมด</span><span id="calc-total">฿0</span>
+              </div>
+            </div>
+            <button class="btn-primary" onclick="updateCalc()"><i class="fa-solid fa-calculator"></i> คำนวณ</button>
+            <button class="btn-outline" onclick="clearCalc()"><i class="fa-solid fa-rotate-left"></i> ล้างข้อมูล</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.0/firebase-storage-compat.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
