@@ -347,8 +347,20 @@ function previewImages(event) {
   files.forEach(file => {
     const reader = new FileReader();
     reader.onload = e => {
-      postImages.push({ file, dataUrl: e.target.result });
-      renderPreview(preview);
+      const imgEl = new Image();
+      imgEl.onload = () => {
+        const canvas = document.createElement('canvas');
+        const MAX = 600;
+        let w = imgEl.width, h = imgEl.height;
+        if (w > h && w > MAX) { h = Math.round(h * MAX / w); w = MAX; }
+        else if (h > MAX)     { w = Math.round(w * MAX / h); h = MAX; }
+        canvas.width = w; canvas.height = h;
+        canvas.getContext('2d').drawImage(imgEl, 0, 0, w, h);
+        const compressed = canvas.toDataURL('image/jpeg', 0.7);
+        postImages.push({ file, dataUrl: compressed });
+        renderPreview(preview);
+      };
+      imgEl.src = e.target.result;
     };
     reader.readAsDataURL(file);
   });
@@ -385,13 +397,9 @@ async function postProduct() {
   btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> กำลังลง...';
 
   try {
-    let imageUrls = [];
-    for (const imgObj of postImages) {
-      const ref = storage.ref(`products/${currentUser.uid}/${Date.now()}_${imgObj.file.name}`);
-      await ref.put(imgObj.file);
-      const url = await ref.getDownloadURL();
-      imageUrls.push(url);
-    }
+    // ใช้ base64 dataUrl แทน Storage upload
+    const imageUrls = postImages.map(img => img.dataUrl);
+
     await db.collection('products').add({
       title, price, category, faculty, condition,
       description: desc, contact,
@@ -402,7 +410,6 @@ async function postProduct() {
       createdAt:   firebase.firestore.FieldValue.serverTimestamp()
     });
     showToast('ลงประกาศสำเร็จ! 🎉', 'success');
-    // Reset form
     ['post-title','post-price','post-desc','post-contact'].forEach(id => document.getElementById(id).value = '');
     document.getElementById('post-category').value = '';
     document.getElementById('post-faculty').value = '';
@@ -664,4 +671,5 @@ function showToast(msg, type = '') {
   toast.className   = 'toast show' + (type ? ' ' + type : '');
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => toast.classList.remove('show'), 3000);
+}
 }
